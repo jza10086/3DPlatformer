@@ -1,0 +1,8 @@
+.godot/
+export.cfg
+export_presets.cfg
+builds/
+*.zip
+*.gif
+*.log
+.DS_Store
