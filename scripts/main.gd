@@ -16,12 +16,13 @@ var finished := false
 var muted := false
 var invulnerability := 0.0
 var notice_left := 0.0
+var save_pulse_left := 0.0
 var respawn_pending := false
 var camera_anchor := Vector3.ZERO
 var camera_heading := PI
 var map_view := false
 var _paused_before_overview := false
-const RECORD_PATH := "user://record_lighthouse_v1.cfg"
+const RECORD_PATH := "user://record_lighthouse_obstacles_v2.cfg"
 const FOLLOW_FOV := 58.0
 const CAMERA_FAR := 520.0
 var sounds: Dictionary = {}
@@ -53,6 +54,7 @@ func _ready() -> void:
 	add_child(canvas)
 	hud = Hud.new()
 	canvas.add_child(hud)
+	hud.checkpoint_total = course.checkpoints.size()-1
 	hud.restart_requested.connect(restart)
 	hud.resume_requested.connect(_toggle_pause)
 	_load_best()
@@ -131,6 +133,7 @@ func _physics_process(delta: float) -> void:
 			running = true
 		if running: elapsed += delta
 	notice_left = maxf(0,notice_left-delta)
+	save_pulse_left = maxf(0,save_pulse_left-delta)
 
 func _process(delta: float) -> void:
 	if not is_instance_valid(player): return
@@ -152,6 +155,9 @@ func _process(delta: float) -> void:
 	hud.elapsed = elapsed
 	hud.best = best
 	hud.checkpoint = checkpoint
+	hud.checkpoint_total = course.checkpoints.size()-1
+	hud.chapter = course.current_chapter
+	hud.save_pulse = clampf(save_pulse_left/1.8,0.0,1.0)
 	hud.falls = falls
 	hud.running = running
 	hud.finished = finished
@@ -159,9 +165,14 @@ func _process(delta: float) -> void:
 	hud.map_view = map_view
 	if map_view:
 		hud.map_markers.clear()
+		hud.map_saves.clear()
 		var viewport_size := get_viewport().get_visible_rect().size
-		for point in course.checkpoints:
+		var chapter_points: Array = course.get("chapter_starts") if course.get("chapter_starts") != null else course.checkpoints
+		for point in chapter_points:
 			hud.map_markers.append(camera.unproject_position(point+Vector3.UP*1.2)*Vector2(1280,800)/viewport_size)
+		for index in range(1,course.checkpoints.size()):
+			var point: Vector3 = course.checkpoints[index]
+			hud.map_saves.append(camera.unproject_position(point+Vector3.UP*1.2)*Vector2(1280,800)/viewport_size)
 		hud.finish_marker = Vector2(-1,-1)
 		if course.get("finish_position") != null:
 			hud.finish_marker = camera.unproject_position(course.get("finish_position")+Vector3.UP*3.0)*Vector2(1280,800)/viewport_size
@@ -205,14 +216,19 @@ func _toggle_overview() -> void:
 func _checkpoint_reached(index: int) -> void:
 	if finished or index <= checkpoint or index >= course.checkpoints.size(): return
 	if index != checkpoint+1:
-		hud.notice = "FIND CHECKPOINT %d BEFORE CONTINUING" % (checkpoint+1)
-		notice_left = 3.0
+		_show_notice("FIND CHECKPOINT %d BEFORE CONTINUING" % (checkpoint+1),3.0)
 		return
 	checkpoint = index
 	course.set_checkpoint(index)
-	hud.notice = "CHECKPOINT SAVED  /  %d OF %d" % [index,course.checkpoints.size()-1]
-	notice_left = 2.8
+	save_pulse_left = 1.8
+	_show_notice("SAVED CHECKPOINT  %d / %d" % [index,course.checkpoints.size()-1],3.2,"Falls return here  ·  Backspace retries from this beacon",true)
 	_play_sound("save")
+
+func _show_notice(message: String,seconds: float,detail: String="",saved: bool=false) -> void:
+	hud.notice = message
+	hud.notice_detail = detail
+	hud.notice_is_save = saved
+	notice_left = seconds
 
 func _hazard_touched() -> void:
 	if invulnerability > 0 or finished or respawn_pending: return
@@ -228,8 +244,8 @@ func _respawn() -> void:
 	camera_anchor = player.position
 	_snap_camera_heading()
 	_update_camera()
-	hud.notice = "BACK ON TRACK"
-	notice_left = 1.4
+	var message := "BACK AT CHECKPOINT  %d / %d" % [checkpoint,course.checkpoints.size()-1] if checkpoint>0 else "BACK AT THE START"
+	_show_notice(message,2.0,"Saved progress is kept" if checkpoint>0 else "Find the first glowing beacon")
 	_play_sound("fall")
 
 func restart() -> void:
@@ -244,6 +260,9 @@ func restart() -> void:
 	invulnerability = 0.8
 	respawn_pending = false
 	notice_left = 0
+	save_pulse_left = 0
+	hud.notice_is_save = false
+	hud.notice_detail = ""
 	course.reset()
 	player.reset_at(course.checkpoints[0])
 	player.set_controls_enabled(true)
@@ -261,8 +280,7 @@ func _toggle_pause() -> void:
 func _finish() -> void:
 	if finished or not running: return
 	if checkpoint != course.checkpoints.size()-1:
-		hud.notice = "FOLLOW THE ROUTE  /  SAVE EVERY CHECKPOINT"
-		notice_left = 3.0
+		_show_notice("FOLLOW THE ROUTE  /  SAVE EVERY CHECKPOINT",3.0)
 		return
 	finished = true
 	player.set_controls_enabled(false)
