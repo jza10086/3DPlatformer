@@ -1,5 +1,5 @@
 extends Node3D
-## One run, one course, one cube. No autoloads or external assets.
+## A full island journey. One plain cube; no external assets or autoloads.
 const Course := preload("res://scripts/course.gd")
 const Player := preload("res://scripts/player.gd")
 const Hud := preload("res://scripts/hud.gd")
@@ -18,6 +18,12 @@ var invulnerability := 0.0
 var notice_left := 0.0
 var respawn_pending := false
 var camera_anchor := Vector3.ZERO
+var camera_heading := PI
+var map_view := false
+var _paused_before_overview := false
+const RECORD_PATH := "user://record_lighthouse_v1.cfg"
+const FOLLOW_FOV := 58.0
+const CAMERA_FAR := 520.0
 var sounds: Dictionary = {}
 
 func _ready() -> void:
@@ -38,7 +44,7 @@ func _ready() -> void:
 	player.process_mode = Node.PROCESS_MODE_PAUSABLE
 	add_child(player)
 	player.camera = camera
-	player.fall_height = -7.5
+	player.fall_height = -14.0
 	player.fell.connect(_hazard_touched)
 	player.jumped.connect(func(): _play_sound("jump"))
 	player.landed.connect(func(): _play_sound("land"))
@@ -58,7 +64,8 @@ func _setup_inputs() -> void:
 		"move_left": [KEY_A,KEY_LEFT], "move_right": [KEY_D,KEY_RIGHT],
 		"move_forward": [KEY_W,KEY_UP], "move_back": [KEY_S,KEY_DOWN],
 		"jump": [KEY_SPACE], "restart": [KEY_R], "pause": [KEY_ESCAPE],
-		"retry_checkpoint": [KEY_BACKSPACE], "accept": [KEY_ENTER], "mute": [KEY_M]
+		"retry_checkpoint": [KEY_BACKSPACE], "accept": [KEY_ENTER], "mute": [KEY_M],
+		"overview": [KEY_TAB]
 	}
 	for action in actions:
 		if not InputMap.has_action(action): InputMap.add_action(action)
@@ -86,7 +93,7 @@ func _build_environment() -> void:
 	env.tonemap_mode = Environment.TONE_MAPPER_LINEAR
 	env.fog_enabled = true
 	env.fog_light_color = Color("bed4df")
-	env.fog_density = 0.0025
+	env.fog_density = 0.0014
 	world.environment = env
 	add_child(world)
 	var sun := DirectionalLight3D.new()
@@ -94,21 +101,23 @@ func _build_environment() -> void:
 	sun.light_color = Color("fff0d1")
 	sun.light_energy = 0.65
 	sun.shadow_enabled = true
-	sun.directional_shadow_max_distance = 85
+	sun.directional_shadow_max_distance = 125
 	add_child(sun)
 	camera = Camera3D.new()
 	camera.name = "ChaseCamera"
-	camera.fov = 55
-	camera.far = 260
+	camera.fov = FOLLOW_FOV
+	camera.far = CAMERA_FAR
 	camera.current = true
 	add_child(camera)
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("restart"): restart()
-	elif event.is_action_pressed("pause") and not finished: _toggle_pause()
+	elif event.is_action_pressed("overview") and not event.is_echo(): _toggle_overview()
+	elif event.is_action_pressed("pause") and (not finished or map_view): _toggle_pause()
 	elif event.is_action_pressed("accept") and finished: restart()
 	elif event.is_action_pressed("retry_checkpoint") and not finished:
-		if get_tree().paused: _toggle_pause()
+		if map_view: _toggle_overview()
+		get_tree().paused = false
 		_hazard_touched()
 	elif event.is_action_pressed("mute"):
 		muted = not muted
@@ -131,6 +140,14 @@ func _process(delta: float) -> void:
 		camera_anchor.x = lerpf(camera_anchor.x,target.x,1-exp(-8*delta))
 		camera_anchor.z = lerpf(camera_anchor.z,target.z,1-exp(-10*delta))
 		camera_anchor.y = lerpf(camera_anchor.y,target.y,1-exp(-3*delta))
+		# Keep the control frame stable while airborne or standing still. The
+		# route tangent anticipates bends; it never chases the cube's velocity.
+		if player.is_on_floor() and Vector2(player.velocity.x,player.velocity.z).length() > 0.25:
+			var forward := _course_forward(player.position)
+			var desired_heading := atan2(forward.x,forward.z)
+			var difference := wrapf(desired_heading-camera_heading,-PI,PI)
+			if absf(difference) > 0.025:
+				camera_heading += clampf(difference*1.8*delta,-0.65*delta,0.65*delta)
 		_update_camera()
 	hud.elapsed = elapsed
 	hud.best = best
@@ -138,19 +155,62 @@ func _process(delta: float) -> void:
 	hud.falls = falls
 	hud.running = running
 	hud.finished = finished
-	hud.paused = get_tree().paused
+	hud.paused = get_tree().paused and not map_view
+	hud.map_view = map_view
+	if map_view:
+		hud.map_markers.clear()
+		var viewport_size := get_viewport().get_visible_rect().size
+		for point in course.checkpoints:
+			hud.map_markers.append(camera.unproject_position(point+Vector3.UP*1.2)*Vector2(1280,800)/viewport_size)
+		hud.finish_marker = Vector2(-1,-1)
+		if course.get("finish_position") != null:
+			hud.finish_marker = camera.unproject_position(course.get("finish_position")+Vector3.UP*3.0)*Vector2(1280,800)/viewport_size
 	hud.notice_alpha = minf(notice_left,1.0)
 	hud.queue_redraw()
 
+func _course_forward(at: Vector3) -> Vector3:
+	if course.has_method("camera_forward_at"):
+		var direction: Vector3 = course.camera_forward_at(at)
+		direction.y = 0.0
+		if direction.length_squared() > 0.01: return direction.normalized()
+	return Vector3.FORWARD
+
+func _snap_camera_heading() -> void:
+	var direction := _course_forward(player.position)
+	camera_heading = atan2(direction.x,direction.z)
+
 func _update_camera() -> void:
-	camera.position = camera_anchor + Vector3(0,10.5,14.5)
-	camera.look_at(camera_anchor+Vector3(0,0,-5.2))
+	if map_view:
+		var center: Vector3 = course.get("overview_center") if course.get("overview_center") != null else Vector3(0,6,-12)
+		var extent: float = float(course.get("overview_size")) if course.get("overview_size") != null else 165.0
+		camera.set_orthogonal(extent,0.1,CAMERA_FAR)
+		camera.position = center + Vector3(-95,155,100)
+		camera.look_at(center)
+		return
+	camera.set_perspective(FOLLOW_FOV,0.1,CAMERA_FAR)
+	var forward := Vector3(sin(camera_heading),0,cos(camera_heading))
+	camera.position = camera_anchor - forward*15.8 + Vector3(0,12.2,0)
+	camera.look_at(camera_anchor+forward*6.8)
+
+func _toggle_overview() -> void:
+	if map_view:
+		map_view = false
+		get_tree().paused = _paused_before_overview
+	else:
+		_paused_before_overview = get_tree().paused
+		map_view = true
+		get_tree().paused = true
+	_update_camera()
 
 func _checkpoint_reached(index: int) -> void:
-	if index <= checkpoint or finished: return
+	if finished or index <= checkpoint or index >= course.checkpoints.size(): return
+	if index != checkpoint+1:
+		hud.notice = "FIND CHECKPOINT %d BEFORE CONTINUING" % (checkpoint+1)
+		notice_left = 3.0
+		return
 	checkpoint = index
 	course.set_checkpoint(index)
-	hud.notice = "CHECKPOINT SAVED  /  %d OF 2" % index
+	hud.notice = "CHECKPOINT SAVED  /  %d OF %d" % [index,course.checkpoints.size()-1]
 	notice_left = 2.8
 	_play_sound("save")
 
@@ -166,12 +226,15 @@ func _respawn() -> void:
 	invulnerability = 0.7
 	player.reset_at(course.checkpoints[checkpoint])
 	camera_anchor = player.position
+	_snap_camera_heading()
 	_update_camera()
 	hud.notice = "BACK ON TRACK"
 	notice_left = 1.4
 	_play_sound("fall")
 
 func restart() -> void:
+	map_view = false
+	_paused_before_overview = false
 	get_tree().paused = false
 	checkpoint = 0
 	elapsed = 0.0
@@ -185,14 +248,22 @@ func restart() -> void:
 	player.reset_at(course.checkpoints[0])
 	player.set_controls_enabled(true)
 	camera_anchor = player.position
+	_snap_camera_heading()
 	_update_camera()
 
 func _toggle_pause() -> void:
+	if map_view:
+		_toggle_overview()
+		return
 	if finished: return
 	get_tree().paused = not get_tree().paused
 
 func _finish() -> void:
 	if finished or not running: return
+	if checkpoint != course.checkpoints.size()-1:
+		hud.notice = "FOLLOW THE ROUTE  /  SAVE EVERY CHECKPOINT"
+		notice_left = 3.0
+		return
 	finished = true
 	player.set_controls_enabled(false)
 	course.celebrating = true
@@ -200,12 +271,12 @@ func _finish() -> void:
 		best = elapsed
 		var config := ConfigFile.new()
 		config.set_value("record","best_seconds",best)
-		config.save("user://record.cfg")
+		config.save(RECORD_PATH)
 	_play_sound("finish")
 
 func _load_best() -> void:
 	var config := ConfigFile.new()
-	if config.load("user://record.cfg") == OK:
+	if config.load(RECORD_PATH) == OK:
 		best = float(config.get_value("record","best_seconds",0.0))
 
 func _build_sounds() -> void:
