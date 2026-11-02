@@ -55,8 +55,8 @@ func _physics_process(delta: float) -> void:
 	_jump_buffer_left = maxf(0.0, _jump_buffer_left - delta)
 	var input_axis := Vector2.ZERO
 	if controls_enabled:
-		input_axis = Input.get_vector("move_left", "move_right", "move_forward", "move_back")
-		if Input.is_action_just_pressed("jump"):
+		input_axis = Input.get_vector("lighthouse_isles_move_left", "lighthouse_isles_move_right", "lighthouse_isles_move_forward", "lighthouse_isles_move_back")
+		if Input.is_action_just_pressed("lighthouse_isles_jump"):
 			_jump_buffer_left = JUMP_BUFFER_TIME
 	var direction := _camera_relative_direction(input_axis)
 	var acceleration := GROUND_ACCELERATION if grounded else AIR_ACCELERATION
@@ -66,7 +66,7 @@ func _physics_process(delta: float) -> void:
 		velocity.y = maxf(velocity.y - GRAVITY * delta, -32.0)
 	if controls_enabled and _jump_buffer_left > 0.0 and _coyote_left > 0.0:
 		_take_jump()
-	if controls_enabled and Input.is_action_just_released("jump") and velocity.y > 0.0:
+	if controls_enabled and Input.is_action_just_released("lighthouse_isles_jump") and velocity.y > 0.0:
 		velocity.y *= 0.48
 	var descending := velocity.y < -1.0
 	move_and_slide()

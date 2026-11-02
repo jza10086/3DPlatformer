@@ -1,8 +1,11 @@
 extends Node3D
+
+signal completed(metrics: Dictionary)
+var personal_best: int = 0
 ## A full island journey. One plain cube; no external assets or autoloads.
-const Course := preload("res://scripts/course.gd")
-const Player := preload("res://scripts/player.gd")
-const Hud := preload("res://scripts/hud.gd")
+const Course := preload("res://games/minigame/godot_party_default_lighthouse_isles/scripts/course.gd")
+const Player := preload("res://games/minigame/godot_party_default_lighthouse_isles/scripts/player.gd")
+const Hud := preload("res://games/minigame/godot_party_default_lighthouse_isles/scripts/hud.gd")
 var course: Node3D
 var player: CharacterBody3D
 var camera: Camera3D
@@ -20,19 +23,23 @@ var save_pulse_left := 0.0
 var respawn_pending := false
 var camera_anchor := Vector3.ZERO
 var camera_heading := PI
+var local_pause: bool = false:
+	set(value):
+		local_pause = value
+		player.process_mode = Node.PROCESS_MODE_DISABLED if value else Node.PROCESS_MODE_INHERIT
+		course.process_mode = player.process_mode
 var map_view := false
 var _paused_before_overview := false
-const RECORD_PATH := "user://record_lighthouse_obstacles_v2.cfg"
 const FOLLOW_FOV := 58.0
 const CAMERA_FAR := 520.0
 var sounds: Dictionary = {}
 
 func _ready() -> void:
-	process_mode = Node.PROCESS_MODE_ALWAYS
+	process_mode = Node.PROCESS_MODE_INHERIT
 	_setup_inputs()
 	_build_environment()
 	course = Course.new()
-	course.process_mode = Node.PROCESS_MODE_PAUSABLE
+	course.process_mode = Node.PROCESS_MODE_INHERIT
 	add_child(course)
 	course.checkpoint_reached.connect(_checkpoint_reached)
 	course.hazard_touched.connect(_hazard_touched)
@@ -42,12 +49,12 @@ func _ready() -> void:
 	player.collision_layer = 2
 	player.collision_mask = 1
 	player.add_to_group("player")
-	player.process_mode = Node.PROCESS_MODE_PAUSABLE
+	player.process_mode = Node.PROCESS_MODE_INHERIT
 	add_child(player)
 	player.camera = camera
 	player.fall_height = -14.0
 	player.fell.connect(_hazard_touched)
-	player.jumped.connect(func(): _play_sound("jump"))
+	player.jumped.connect(func(): _play_sound("lighthouse_isles_jump"))
 	player.landed.connect(func(): _play_sound("land"))
 	var canvas := CanvasLayer.new()
 	canvas.layer = 5
@@ -57,17 +64,17 @@ func _ready() -> void:
 	hud.checkpoint_total = course.checkpoints.size()-1
 	hud.restart_requested.connect(restart)
 	hud.resume_requested.connect(_toggle_pause)
-	_load_best()
+	best = float(personal_best) / 1000.0
 	_build_sounds()
 	restart()
 
 func _setup_inputs() -> void:
 	var actions := {
-		"move_left": [KEY_A,KEY_LEFT], "move_right": [KEY_D,KEY_RIGHT],
-		"move_forward": [KEY_W,KEY_UP], "move_back": [KEY_S,KEY_DOWN],
-		"jump": [KEY_SPACE], "restart": [KEY_R], "pause": [KEY_ESCAPE],
-		"retry_checkpoint": [KEY_BACKSPACE], "accept": [KEY_ENTER], "mute": [KEY_M],
-		"overview": [KEY_TAB]
+		"lighthouse_isles_move_left": [KEY_A,KEY_LEFT], "lighthouse_isles_move_right": [KEY_D,KEY_RIGHT],
+		"lighthouse_isles_move_forward": [KEY_W,KEY_UP], "lighthouse_isles_move_back": [KEY_S,KEY_DOWN],
+		"lighthouse_isles_jump": [KEY_SPACE], "lighthouse_isles_restart": [KEY_R], "lighthouse_isles_pause": [KEY_ESCAPE],
+		"lighthouse_isles_retry_checkpoint": [KEY_BACKSPACE], "lighthouse_isles_accept": [KEY_ENTER], "lighthouse_isles_mute": [KEY_M],
+		"lighthouse_isles_overview": [KEY_TAB]
 	}
 	for action in actions:
 		if not InputMap.has_action(action): InputMap.add_action(action)
@@ -113,23 +120,23 @@ func _build_environment() -> void:
 	add_child(camera)
 
 func _unhandled_input(event: InputEvent) -> void:
-	if event.is_action_pressed("restart"): restart()
-	elif event.is_action_pressed("overview") and not event.is_echo(): _toggle_overview()
-	elif event.is_action_pressed("pause") and (not finished or map_view): _toggle_pause()
-	elif event.is_action_pressed("accept") and finished: restart()
-	elif event.is_action_pressed("retry_checkpoint") and not finished:
+	if event.is_action_pressed("lighthouse_isles_restart"): restart()
+	elif event.is_action_pressed("lighthouse_isles_overview") and not event.is_echo(): _toggle_overview()
+	elif event.is_action_pressed("lighthouse_isles_pause") and (not finished or map_view): _toggle_pause()
+	elif event.is_action_pressed("lighthouse_isles_accept") and finished: restart()
+	elif event.is_action_pressed("lighthouse_isles_retry_checkpoint") and not finished:
 		if map_view: _toggle_overview()
-		get_tree().paused = false
+		local_pause = false
 		_hazard_touched()
-	elif event.is_action_pressed("mute"):
+	elif event.is_action_pressed("lighthouse_isles_mute"):
 		muted = not muted
 		hud.muted = muted
 
 func _physics_process(delta: float) -> void:
-	if get_tree().paused: return
+	if local_pause: return
 	invulnerability = maxf(0,invulnerability-delta)
 	if not finished:
-		if not running and (Input.get_vector("move_left","move_right","move_forward","move_back").length()>0 or Input.is_action_just_pressed("jump")):
+		if not running and (Input.get_vector("lighthouse_isles_move_left","lighthouse_isles_move_right","lighthouse_isles_move_forward","lighthouse_isles_move_back").length()>0 or Input.is_action_just_pressed("lighthouse_isles_jump")):
 			running = true
 		if running: elapsed += delta
 	notice_left = maxf(0,notice_left-delta)
@@ -137,7 +144,7 @@ func _physics_process(delta: float) -> void:
 
 func _process(delta: float) -> void:
 	if not is_instance_valid(player): return
-	if not get_tree().paused:
+	if not local_pause:
 		var target := player.global_position
 		target.y = maxf(course.checkpoints[checkpoint].y-0.5,target.y-0.43)
 		camera_anchor.x = lerpf(camera_anchor.x,target.x,1-exp(-8*delta))
@@ -161,7 +168,7 @@ func _process(delta: float) -> void:
 	hud.falls = falls
 	hud.running = running
 	hud.finished = finished
-	hud.paused = get_tree().paused and not map_view
+	hud.paused = local_pause and not map_view
 	hud.map_view = map_view
 	if map_view:
 		hud.map_markers.clear()
@@ -206,11 +213,11 @@ func _update_camera() -> void:
 func _toggle_overview() -> void:
 	if map_view:
 		map_view = false
-		get_tree().paused = _paused_before_overview
+		local_pause = _paused_before_overview
 	else:
-		_paused_before_overview = get_tree().paused
+		_paused_before_overview = local_pause
 		map_view = true
-		get_tree().paused = true
+		local_pause = true
 	_update_camera()
 
 func _checkpoint_reached(index: int) -> void:
@@ -251,7 +258,7 @@ func _respawn() -> void:
 func restart() -> void:
 	map_view = false
 	_paused_before_overview = false
-	get_tree().paused = false
+	local_pause = false
 	checkpoint = 0
 	elapsed = 0.0
 	falls = 0
@@ -275,7 +282,7 @@ func _toggle_pause() -> void:
 		_toggle_overview()
 		return
 	if finished: return
-	get_tree().paused = not get_tree().paused
+	local_pause = not local_pause
 
 func _finish() -> void:
 	if finished or not running: return
@@ -287,18 +294,11 @@ func _finish() -> void:
 	course.celebrating = true
 	if best <= 0 or elapsed < best:
 		best = elapsed
-		var config := ConfigFile.new()
-		config.set_value("record","best_seconds",best)
-		config.save(RECORD_PATH)
 	_play_sound("finish")
-
-func _load_best() -> void:
-	var config := ConfigFile.new()
-	if config.load(RECORD_PATH) == OK:
-		best = float(config.get_value("record","best_seconds",0.0))
+	completed.emit({"time": roundi(elapsed * 1000.0), "falls": falls})
 
 func _build_sounds() -> void:
-	for entry in [["jump",540.0,0.08],["land",230.0,0.05],["save",880.0,0.24],["fall",140.0,0.16],["finish",1046.5,0.45]]:
+	for entry in [["lighthouse_isles_jump",540.0,0.08],["land",230.0,0.05],["save",880.0,0.24],["fall",140.0,0.16],["finish",1046.5,0.45]]:
 		var stream := AudioStreamWAV.new()
 		stream.format = AudioStreamWAV.FORMAT_16_BITS
 		stream.mix_rate = 22050
@@ -318,7 +318,11 @@ func _play_sound(key: String) -> void:
 	var sound := AudioStreamPlayer.new()
 	sound.stream = sounds[key]
 	sound.volume_db = -7
-	sound.process_mode = Node.PROCESS_MODE_PAUSABLE
+	sound.process_mode = Node.PROCESS_MODE_INHERIT
 	add_child(sound)
 	sound.finished.connect(sound.queue_free)
 	sound.play()
+
+func _exit_tree() -> void:
+	for action: String in ["lighthouse_isles_move_left", "lighthouse_isles_move_right", "lighthouse_isles_move_forward", "lighthouse_isles_move_back", "lighthouse_isles_jump", "lighthouse_isles_restart", "lighthouse_isles_pause", "lighthouse_isles_retry_checkpoint", "lighthouse_isles_accept", "lighthouse_isles_mute", "lighthouse_isles_overview"]:
+		InputMap.erase_action(action)
