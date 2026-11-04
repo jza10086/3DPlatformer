@@ -9,3 +9,18 @@ msgstr "WASD 移动，空格跳跃。按路线通过所有检查点，抵达终�
 
 msgid "灯塔群岛"
 msgstr "灯塔群岛"
+
+msgid "hud.chapter"
+msgstr "{number}  /  {chapter}"
+
+msgid "hud.clock"
+msgstr "TIME  {time}"
+
+msgid "hud.best"
+msgstr "BEST  {time}"
+
+msgid "hud.saves"
+msgstr "CHECKPOINT  {current} / {total}"
+
+msgid "hud.result"
+msgstr "{time}\n{falls} falls · {total} checkpoints · One excellent cube"

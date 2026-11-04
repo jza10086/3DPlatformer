@@ -1,6 +1,532 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene format=3]
 
+[ext_resource type="PackedScene" path="res://games/minigame/godot_party_default_lighthouse_isles/scenes/course.tscn" id="course"]
 [ext_resource type="Script" path="res://games/minigame/godot_party_default_lighthouse_isles/scripts/main.gd" id="1"]
+[ext_resource type="Script" path="res://games/minigame/godot_party_default_lighthouse_isles/scripts/player.gd" id="2_seb35"]
+[ext_resource type="Script" path="res://games/minigame/godot_party_default_lighthouse_isles/scripts/hud.gd" id="3_ibh3q"]
 
-[node name="LighthouseIsles" type="Node3D"]
+[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_ddbq2"]
+sky_top_color = Color(0.56078434, 0.7254902, 0.84313726, 1)
+sky_horizon_color = Color(0.8784314, 0.8627451, 0.8235294, 1)
+sky_curve = 0.22
+ground_bottom_color = Color(0.43137255, 0.61960787, 0.7254902, 1)
+ground_horizon_color = Color(0.8784314, 0.8627451, 0.8235294, 1)
+
+[sub_resource type="Sky" id="Sky_v0kmy"]
+sky_material = SubResource("ProceduralSkyMaterial_ddbq2")
+
+[sub_resource type="Environment" id="Environment_i6shf"]
+background_mode = 2
+sky = SubResource("Sky_v0kmy")
+ambient_light_source = 2
+ambient_light_color = Color(0.7882353, 0.8784314, 0.92941177, 1)
+ambient_light_energy = 0.22
+fog_enabled = true
+fog_light_color = Color(0.74509805, 0.83137256, 0.8745098, 1)
+fog_density = 0.0014
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_617k5"]
+size = Vector3(0.85, 0.85, 0.85)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_ym100"]
+albedo_color = Color(0.97, 0.97, 0.95, 1)
+roughness = 0.66
+
+[sub_resource type="BoxMesh" id="BoxMesh_qiakm"]
+size = Vector3(0.85, 0.85, 0.85)
+
+[sub_resource type="StyleBoxFlat" id="Light"]
+bg_color = Color(0.97,0.98,0.94,0.92)
+corner_radius_top_left = 14
+corner_radius_top_right = 14
+corner_radius_bottom_left = 14
+corner_radius_bottom_right = 14
+
+[sub_resource type="StyleBoxFlat" id="Dark"]
+bg_color = Color(0.12,0.21,0.28,0.94)
+corner_radius_top_left = 14
+corner_radius_top_right = 14
+corner_radius_bottom_left = 14
+corner_radius_bottom_right = 14
+
+[node name="LighthouseIsles" type="Node3D" unique_id=2048746659]
 script = ExtResource("1")
+
+[node name="WorldEnvironment1" type="WorldEnvironment" parent="." unique_id=2026878394]
+environment = SubResource("Environment_i6shf")
+
+[node name="DirectionalLight3D2" type="DirectionalLight3D" parent="." unique_id=411636523]
+transform = Transform3D(0.8660254, 0.38302222, -0.32139382, 0, 0.64278764, 0.76604444, 0.5, -0.66341394, 0.5566704, 0, 0, 0)
+light_color = Color(1, 0.9411765, 0.81960785, 1)
+light_energy = 0.65
+shadow_enabled = true
+directional_shadow_max_distance = 125.0
+
+[node name="ChaseCamera" type="Camera3D" parent="." unique_id=1070674877]
+transform = Transform3D(1, 0, 0, 0, 0.8799705, 0.47502837, 0, -0.47502837, 0.8799705, -52, 12.679999, 53.8)
+current = true
+fov = 58.0
+near = 0.1
+far = 520.0
+
+[node name="Cube" type="CharacterBody3D" parent="." unique_id=1405038802]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -52, 0.48, 38)
+collision_layer = 2
+floor_max_angle = 0.87266463
+floor_snap_length = 0.25
+platform_on_leave = 2
+script = ExtResource("2_seb35")
+fall_height = -14.0
+
+[node name="Collision" type="CollisionShape3D" parent="Cube" unique_id=1467050320]
+shape = SubResource("BoxShape3D_617k5")
+
+[node name="Visual" type="MeshInstance3D" parent="Cube" unique_id=1954480918]
+material_override = SubResource("StandardMaterial3D_ym100")
+mesh = SubResource("BoxMesh_qiakm")
+
+[node name="GameHUD" type="CanvasLayer" parent="." unique_id=1300707779]
+layer = -2
+
+[node name="HUD" type="Control" parent="GameHUD" unique_id=629655210]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 1
+script = ExtResource("3_ibh3q")
+
+[node name="Course" parent="." instance=ExtResource("course")]
+
+[node name="Identity" type="Panel" parent="GameHUD/HUD"]
+unique_name_in_owner = true
+anchor_left = 0
+anchor_right = 0
+anchor_top = 0
+anchor_bottom = 0
+offset_left = 32
+offset_top = 28
+offset_right = 306
+offset_bottom = 110
+mouse_filter = 2
+theme_override_styles/panel = SubResource("Dark")
+
+
+[node name="CubeIcon" type="ColorRect" parent="GameHUD/HUD/Identity"]
+unique_name_in_owner = true
+anchor_left = 0
+anchor_right = 0
+anchor_top = 0
+anchor_bottom = 0
+offset_left = 18
+offset_top = 23
+offset_right = 53
+offset_bottom = 58
+mouse_filter = 2
+color = Color(0.97,0.97,0.94,1)
+
+[node name="Title" type="Label" parent="GameHUD/HUD/Identity"]
+unique_name_in_owner = true
+anchor_left = 0
+anchor_right = 0
+anchor_top = 0
+anchor_bottom = 0
+offset_left = 63
+offset_top = 7
+offset_right = 257
+offset_bottom = 76
+mouse_filter = 2
+text = "CUBE\nLIGHTHOUSE ISLES"
+vertical_alignment = 1
+horizontal_alignment = 0
+autowrap_mode = 3
+theme_override_font_sizes/font_size = 21
+theme_override_colors/font_color = Color(0.97,0.97,0.94,1)
+
+[node name="StageInfo" type="Panel" parent="GameHUD/HUD"]
+unique_name_in_owner = true
+anchor_left = 0.5
+anchor_right = 0.5
+anchor_top = 0
+anchor_bottom = 0
+offset_left = -240
+offset_top = 28
+offset_right = 240
+offset_bottom = 110
+mouse_filter = 2
+theme_override_styles/panel = SubResource("Dark")
+
+
+[node name="Stage" type="Label" parent="GameHUD/HUD/StageInfo"]
+unique_name_in_owner = true
+anchor_left = 0
+anchor_right = 0
+anchor_top = 0
+anchor_bottom = 0
+offset_left = 8
+offset_top = 5
+offset_right = 472
+offset_bottom = 51
+mouse_filter = 2
+text = "01 / HARBOR GARDENS"
+vertical_alignment = 1
+horizontal_alignment = 1
+autowrap_mode = 3
+theme_override_font_sizes/font_size = 22
+theme_override_colors/font_color = Color(0.97,0.97,0.94,1)
+
+[node name="ChapterBar" type="ProgressBar" parent="GameHUD/HUD/StageInfo"]
+unique_name_in_owner = true
+anchor_left = 0
+anchor_right = 0
+anchor_top = 0
+anchor_bottom = 0
+offset_left = 24
+offset_top = 58
+offset_right = 456
+offset_bottom = 66
+mouse_filter = 2
+max_value = 6.0
+value = 1.0
+show_percentage = false
+
+[node name="Times" type="Panel" parent="GameHUD/HUD"]
+unique_name_in_owner = true
+anchor_left = 1
+anchor_right = 1
+anchor_top = 0
+anchor_bottom = 0
+offset_left = -265
+offset_top = 28
+offset_right = -32
+offset_bottom = 138
+mouse_filter = 2
+theme_override_styles/panel = SubResource("Light")
+
+
+[node name="Clock" type="Label" parent="GameHUD/HUD/Times"]
+unique_name_in_owner = true
+anchor_left = 0
+anchor_right = 0
+anchor_top = 0
+anchor_bottom = 0
+offset_left = 16
+offset_top = 8
+offset_right = 223
+offset_bottom = 64
+mouse_filter = 2
+text = "TIME  01:30.00"
+vertical_alignment = 1
+horizontal_alignment = 0
+autowrap_mode = 3
+theme_override_font_sizes/font_size = 23
+theme_override_colors/font_color = Color(0.14,0.22,0.31,1)
+
+[node name="Best" type="Label" parent="GameHUD/HUD/Times"]
+unique_name_in_owner = true
+anchor_left = 0
+anchor_right = 0
+anchor_top = 0
+anchor_bottom = 0
+offset_left = 16
+offset_top = 64
+offset_right = 223
+offset_bottom = 96
+mouse_filter = 2
+text = "BEST  01:24.58"
+vertical_alignment = 1
+horizontal_alignment = 0
+autowrap_mode = 3
+theme_override_font_sizes/font_size = 15
+theme_override_colors/font_color = Color(0.14,0.22,0.31,1)
+
+[node name="Saves" type="Panel" parent="GameHUD/HUD"]
+unique_name_in_owner = true
+anchor_left = 0
+anchor_right = 0
+anchor_top = 0
+anchor_bottom = 0
+offset_left = 32
+offset_top = 127
+offset_right = 337
+offset_bottom = 224
+mouse_filter = 2
+theme_override_styles/panel = SubResource("Light")
+
+
+[node name="SaveCount" type="Label" parent="GameHUD/HUD/Saves"]
+unique_name_in_owner = true
+anchor_left = 0
+anchor_right = 0
+anchor_top = 0
+anchor_bottom = 0
+offset_left = 14
+offset_top = 6
+offset_right = 291
+offset_bottom = 40
+mouse_filter = 2
+text = "CHECKPOINT  2 / 9"
+vertical_alignment = 1
+horizontal_alignment = 0
+autowrap_mode = 3
+theme_override_font_sizes/font_size = 20
+theme_override_colors/font_color = Color(0.14,0.22,0.31,1)
+
+[node name="SaveHint" type="Label" parent="GameHUD/HUD/Saves"]
+unique_name_in_owner = true
+anchor_left = 0
+anchor_right = 0
+anchor_top = 0
+anchor_bottom = 0
+offset_left = 14
+offset_top = 38
+offset_right = 291
+offset_bottom = 69
+mouse_filter = 2
+text = "Falls return to this saved point"
+vertical_alignment = 1
+horizontal_alignment = 0
+autowrap_mode = 3
+theme_override_font_sizes/font_size = 15
+theme_override_colors/font_color = Color(0.14,0.22,0.31,1)
+
+[node name="SaveBar" type="ProgressBar" parent="GameHUD/HUD/Saves"]
+unique_name_in_owner = true
+anchor_left = 0
+anchor_right = 0
+anchor_top = 0
+anchor_bottom = 0
+offset_left = 14
+offset_top = 76
+offset_right = 291
+offset_bottom = 85
+mouse_filter = 2
+max_value = 9.0
+value = 2.0
+show_percentage = false
+
+[node name="Controls" type="Panel" parent="GameHUD/HUD"]
+unique_name_in_owner = true
+anchor_left = 0.5
+anchor_right = 0.5
+anchor_top = 1
+anchor_bottom = 1
+offset_left = -690
+offset_top = -75
+offset_right = 690
+offset_bottom = -27
+mouse_filter = 2
+theme_override_styles/panel = SubResource("Dark")
+
+
+[node name="Guide" type="Label" parent="GameHUD/HUD/Controls"]
+unique_name_in_owner = true
+anchor_left = 0
+anchor_right = 0
+anchor_top = 0
+anchor_bottom = 0
+offset_left = 8
+offset_top = 0
+offset_right = 1372
+offset_bottom = 48
+mouse_filter = 2
+text = "WASD / ARROWS  Move    SPACE  Jump    TAB  Map    BACKSPACE  Retry    R  Restart    ESC  Pause    M  Sound"
+vertical_alignment = 1
+horizontal_alignment = 1
+autowrap_mode = 3
+theme_override_font_sizes/font_size = 17
+theme_override_colors/font_color = Color(0.97,0.97,0.94,1)
+
+[node name="Prompt" type="Panel" parent="GameHUD/HUD"]
+unique_name_in_owner = true
+anchor_left = 0.5
+anchor_right = 0.5
+anchor_top = 1
+anchor_bottom = 1
+offset_left = -370
+offset_top = -209
+offset_right = 370
+offset_bottom = -121
+mouse_filter = 2
+theme_override_styles/panel = SubResource("Dark")
+
+
+[node name="PromptText" type="Label" parent="GameHUD/HUD/Prompt"]
+unique_name_in_owner = true
+anchor_left = 0
+anchor_right = 0
+anchor_top = 0
+anchor_bottom = 0
+offset_left = 12
+offset_top = 3
+offset_right = 728
+offset_bottom = 85
+mouse_filter = 2
+text = "One little cube. A whole island journey.\nMove to begin · Hold Space for height · Tab to explore the map"
+vertical_alignment = 1
+horizontal_alignment = 1
+autowrap_mode = 3
+theme_override_font_sizes/font_size = 19
+theme_override_colors/font_color = Color(0.97,0.97,0.94,1)
+
+[node name="Notice" type="Panel" parent="GameHUD/HUD"]
+unique_name_in_owner = true
+anchor_left = 0.5
+anchor_right = 0.5
+anchor_top = 0
+anchor_bottom = 0
+offset_left = -350
+offset_top = 126
+offset_right = 350
+offset_bottom = 212
+mouse_filter = 2
+theme_override_styles/panel = SubResource("Dark")
+visible = false
+
+
+[node name="NoticeText" type="Label" parent="GameHUD/HUD/Notice"]
+unique_name_in_owner = true
+anchor_left = 0
+anchor_right = 0
+anchor_top = 0
+anchor_bottom = 0
+offset_left = 12
+offset_top = 2
+offset_right = 688
+offset_bottom = 84
+mouse_filter = 2
+text = "SAVED CHECKPOINT  2 / 9\nFalls return here"
+vertical_alignment = 1
+horizontal_alignment = 1
+autowrap_mode = 3
+theme_override_font_sizes/font_size = 20
+theme_override_colors/font_color = Color(0.97,0.97,0.94,1)
+
+[node name="Pause" type="Panel" parent="GameHUD/HUD"]
+unique_name_in_owner = true
+anchor_left = 0.5
+anchor_right = 0.5
+anchor_top = 0.5
+anchor_bottom = 0.5
+offset_left = -345
+offset_top = -210
+offset_right = 345
+offset_bottom = 210
+mouse_filter = 2
+theme_override_styles/panel = SubResource("Dark")
+visible = false
+
+
+[node name="PauseTitle" type="Label" parent="GameHUD/HUD/Pause"]
+unique_name_in_owner = true
+anchor_left = 0
+anchor_right = 0
+anchor_top = 0
+anchor_bottom = 0
+offset_left = 15
+offset_top = 20
+offset_right = 675
+offset_bottom = 95
+mouse_filter = 2
+text = "TAKE A BREATHER"
+vertical_alignment = 1
+horizontal_alignment = 1
+autowrap_mode = 3
+theme_override_font_sizes/font_size = 32
+theme_override_colors/font_color = Color(0.97,0.97,0.94,1)
+
+[node name="PauseBody" type="Label" parent="GameHUD/HUD/Pause"]
+unique_name_in_owner = true
+anchor_left = 0
+anchor_right = 0
+anchor_top = 0
+anchor_bottom = 0
+offset_left = 22
+offset_top = 105
+offset_right = 668
+offset_bottom = 230
+mouse_filter = 2
+text = "Your timer and the islands are paused.\nTab views the full map. Backspace retries this section."
+vertical_alignment = 1
+horizontal_alignment = 1
+autowrap_mode = 3
+theme_override_font_sizes/font_size = 22
+theme_override_colors/font_color = Color(0.97,0.97,0.94,1)
+
+[node name="Resume" type="Button" parent="GameHUD/HUD/Pause"]
+unique_name_in_owner = true
+anchor_left = 0
+anchor_right = 0
+anchor_top = 0
+anchor_bottom = 0
+offset_left = 80
+offset_top = 256
+offset_right = 610
+offset_bottom = 320
+text = "KEEP GOING  /  ESC"
+
+[node name="RestartHint" type="Label" parent="GameHUD/HUD/Pause"]
+unique_name_in_owner = true
+anchor_left = 0
+anchor_right = 0
+anchor_top = 0
+anchor_bottom = 0
+offset_left = 42
+offset_top = 346
+offset_right = 648
+offset_bottom = 394
+mouse_filter = 2
+text = "R · Start a fresh run"
+vertical_alignment = 1
+horizontal_alignment = 1
+autowrap_mode = 3
+theme_override_font_sizes/font_size = 18
+theme_override_colors/font_color = Color(0.97,0.97,0.94,1)
+
+[node name="MapLegend" type="Panel" parent="GameHUD/HUD"]
+unique_name_in_owner = true
+anchor_left = 0
+anchor_right = 0
+anchor_top = 0
+anchor_bottom = 0
+offset_left = 32
+offset_top = 128
+offset_right = 352
+offset_bottom = 462
+mouse_filter = 2
+theme_override_styles/panel = SubResource("Dark")
+visible = false
+
+
+[node name="Legend" type="Label" parent="GameHUD/HUD/MapLegend"]
+unique_name_in_owner = true
+anchor_left = 0
+anchor_right = 0
+anchor_top = 0
+anchor_bottom = 0
+offset_left = 15
+offset_top = 10
+offset_right = 307
+offset_bottom = 320
+mouse_filter = 2
+text = "FOLLOW THE ISLANDS\n1  HARBOR GARDENS\n2  WINDMILL COURT\n3  CANOPY PATHS\n4  FERRY HARBOR\n5  RIDGE ASCENT\n6  LIGHTHOUSE RUN\nGold dots = checkpoints"
+vertical_alignment = 1
+horizontal_alignment = 0
+autowrap_mode = 3
+theme_override_font_sizes/font_size = 20
+theme_override_colors/font_color = Color(0.97,0.97,0.94,1)
+
+[node name="Muted" type="Label" parent="GameHUD/HUD"]
+unique_name_in_owner = true
+anchor_left = 1
+anchor_right = 1
+anchor_top = 1
+anchor_bottom = 1
+offset_left = -213
+offset_top = -78
+offset_right = -35
+offset_bottom = -30
+mouse_filter = 2
+visible = false
+text = "SOUND OFF"
+horizontal_alignment = 2

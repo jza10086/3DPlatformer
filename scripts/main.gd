@@ -1,11 +1,9 @@
 extends Node3D
+const SoloRound = preload("res://games/protocols/godot_party_default_protocol/solo_round.gd")
 
 signal completed(metrics: Dictionary)
 var personal_best: int = 0
 ## A full island journey. One plain cube; no external assets or autoloads.
-const Course := preload("res://games/minigame/godot_party_default_lighthouse_isles/scripts/course.gd")
-const Player := preload("res://games/minigame/godot_party_default_lighthouse_isles/scripts/player.gd")
-const Hud := preload("res://games/minigame/godot_party_default_lighthouse_isles/scripts/hud.gd")
 var course: Node3D
 var player: CharacterBody3D
 var camera: Camera3D
@@ -37,30 +35,21 @@ var sounds: Dictionary = {}
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_INHERIT
 	_setup_inputs()
-	_build_environment()
-	course = Course.new()
-	course.process_mode = Node.PROCESS_MODE_INHERIT
-	add_child(course)
+	course = $Course
+	camera = $ChaseCamera
 	course.checkpoint_reached.connect(_checkpoint_reached)
 	course.hazard_touched.connect(_hazard_touched)
 	course.finish_reached.connect(_finish)
-	player = Player.new()
-	player.name = "Cube"
-	player.collision_layer = 2
-	player.collision_mask = 1
+	player = $Cube
 	player.add_to_group("player")
-	player.process_mode = Node.PROCESS_MODE_INHERIT
-	add_child(player)
 	player.camera = camera
 	player.fall_height = -14.0
 	player.fell.connect(_hazard_touched)
 	player.jumped.connect(func(): _play_sound("lighthouse_isles_jump"))
 	player.landed.connect(func(): _play_sound("land"))
-	var canvas := CanvasLayer.new()
-	canvas.layer = 5
-	add_child(canvas)
-	hud = Hud.new()
-	canvas.add_child(hud)
+	hud = $GameHUD/HUD
+	if get_parent() is SoloRound:
+		hud.i18n = get_parent().api.i18n
 	hud.checkpoint_total = course.checkpoints.size()-1
 	hud.restart_requested.connect(restart)
 	hud.resume_requested.connect(_toggle_pause)
@@ -82,42 +71,6 @@ func _setup_inputs() -> void:
 			var event := InputEventKey.new()
 			event.physical_keycode = key
 			if not InputMap.action_has_event(action,event): InputMap.action_add_event(action,event)
-
-func _build_environment() -> void:
-	var world := WorldEnvironment.new()
-	var env := Environment.new()
-	env.background_mode = Environment.BG_SKY
-	var sky := Sky.new()
-	var sky_material := ProceduralSkyMaterial.new()
-	sky_material.sky_top_color = Color("8fb9d7")
-	sky_material.sky_horizon_color = Color("e0dcd2")
-	sky_material.ground_bottom_color = Color("6e9eb9")
-	sky_material.ground_horizon_color = Color("e0dcd2")
-	sky_material.sky_curve = 0.22
-	sky.sky_material = sky_material
-	env.sky = sky
-	env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
-	env.ambient_light_color = Color("c9e0ed")
-	env.ambient_light_energy = 0.22
-	env.tonemap_mode = Environment.TONE_MAPPER_LINEAR
-	env.fog_enabled = true
-	env.fog_light_color = Color("bed4df")
-	env.fog_density = 0.0014
-	world.environment = env
-	add_child(world)
-	var sun := DirectionalLight3D.new()
-	sun.rotation_degrees = Vector3(-50,-30,0)
-	sun.light_color = Color("fff0d1")
-	sun.light_energy = 0.65
-	sun.shadow_enabled = true
-	sun.directional_shadow_max_distance = 125
-	add_child(sun)
-	camera = Camera3D.new()
-	camera.name = "ChaseCamera"
-	camera.fov = FOLLOW_FOV
-	camera.far = CAMERA_FAR
-	camera.current = true
-	add_child(camera)
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("lighthouse_isles_restart"): restart()
@@ -184,7 +137,7 @@ func _process(delta: float) -> void:
 		if course.get("finish_position") != null:
 			hud.finish_marker = camera.unproject_position(course.get("finish_position")+Vector3.UP*3.0)*Vector2(1280,800)/viewport_size
 	hud.notice_alpha = minf(notice_left,1.0)
-	hud.queue_redraw()
+	hud.refresh()
 
 func _course_forward(at: Vector3) -> Vector3:
 	if course.has_method("camera_forward_at"):

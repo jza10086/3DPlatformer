@@ -33,21 +33,7 @@ func _ready() -> void:
 	# Platforms carry the cube while grounded, without adding a surprising
 	# sideways launch when it jumps off a moving landing pad.
 	platform_on_leave = CharacterBody3D.PLATFORM_ON_LEAVE_DO_NOTHING
-	var shape := BoxShape3D.new()
-	shape.size = Vector3.ONE * CUBE_SIZE
-	var collider := CollisionShape3D.new()
-	collider.shape = shape
-	add_child(collider)
-	visual = MeshInstance3D.new()
-	var mesh := BoxMesh.new()
-	mesh.size = Vector3.ONE * CUBE_SIZE
-	visual.mesh = mesh
-	var material := StandardMaterial3D.new()
-	material.albedo_color = Color(0.97, 0.97, 0.95)
-	material.roughness = 0.66
-	visual.material_override = material
-	add_child(visual)
-
+	visual = $Visual
 
 func _physics_process(delta: float) -> void:
 	var grounded := is_on_floor()
