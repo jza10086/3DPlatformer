@@ -7,8 +7,8 @@ msgstr ""
 msgid "WASD 移动，空格跳跃。按路线通过所有检查点，抵达终点。"
 msgstr "WASD 移动，空格跳跃。按路线通过所有检查点，抵达终点。"
 
-msgid "灯塔群岛"
-msgstr "灯塔群岛"
+msgid "极速追逐"
+msgstr "极速追逐"
 
 msgid "hud.chapter"
 msgstr "{number}  /  {chapter}"

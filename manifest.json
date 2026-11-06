@@ -3,7 +3,7 @@
   "core_api_major": 4,
   "package_version": "1.0.0",
   "id": "godot_party_default_lighthouse_isles",
-  "name": "灯塔群岛",
+  "name": "极速追逐",
   "kind": "minigame",
   "config_schema": "settings.gd",
   "entry": "party_round.tscn",
