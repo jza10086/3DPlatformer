@@ -11,9 +11,9 @@
 
 ## 运行
 
-1. 用 Godot 4.7.2 打开 `project.godot`。
-2. 按 **F5** 运行项目（或 F6 运行 `scenes/main.tscn`）。
-3. 移动后计时开始。无需外部素材、插件或下载依赖。
+1. 打开完整 GodotParty 主工程。
+2. 大厅选择本包，或 F6 运行包内 `scenes/main.tscn`。
+3. 正式准备页确认后，移动开始计时；F6 直接进入预览。
 
 ```sh
 godot --path .
@@ -30,7 +30,7 @@ godot --path .
 | Tab | 全图实景俯瞰 / 返回；期间暂停 |
 | Backspace | 返回最近检查点，记一次失败 |
 | R | 完整重开计时与赛道 |
-| Esc | 暂停 / 继续；全图中返回原状态 |
+| Esc | 正式框架菜单；F6 暂停 / 继续或退出全图 |
 | Enter | 完赛后再来一局 |
 | M | 音效开关 |
 
@@ -50,7 +50,7 @@ godot --path .
 - **9 个顺序中途检查点**。必须沿路线依次保存，才会计入有效完赛；失败不必重跑整张地图。
 - 安全地面为青绿和浅石色；活动危险物为橙红；检查点和终点为金色。箭头、旗帜和建筑地标共同引路。
 - 路径之间的空隙是真实跨越，岛面与休息区则连续可走；没有隐形墙强迫唯一解。
-- 个人最佳保存在 `user://record_lighthouse_obstacles_v2.cfg`，与旧版短赛道纪录隔离。
+- 正式个人最佳由 SoloRound 保存为包内安装配置目录的 `record.json`；F6 不保存。
 
 ## 新增的可玩道路与中途存档
 
@@ -74,11 +74,11 @@ godot --path .
 
 ```text
 scenes/main.tscn      入口
-scripts/main.gd      比赛状态、镜头、全图视角、输入、程序化短音效
+scripts/main.gd      比赛状态、镜头、全图视角、作用域输入与音效
 scripts/player.gd    不变的 Cube 移动、跳跃、土狼时间与跳跃缓冲
 scripts/course.gd    完整原创地图、建筑、地貌、分路与障碍
 scripts/hud.gd       简洁 HUD、六区进度、九处存档、全图图例、暂停与完赛卡片
-tests/               控制器、状态集成与正常输入通关测试
+audio/               可编辑的五个短音效 Cue 资源
 docs/map-design.md   案例到地图的设计依据
 ```
 
@@ -86,16 +86,7 @@ docs/map-design.md   案例到地图的设计依据
 
 ## 验证
 
-```sh
-godot --headless --path . --editor --import --quit
-godot --headless --path . --fixed-fps 60 --script res://tests/controller.gd
-godot --headless --path . --fixed-fps 60 --script res://tests/focused.gd
-godot --headless --path . --fixed-fps 60 --script res://tests/traverse.gd
-godot --headless --path . --fixed-fps 60 --script res://tests/traverse.gd -- --route=upper
-godot --headless --path . --fixed-fps 60 --script res://tests/traverse.gd -- --demo-respawn
-```
-
-`traverse.gd` 从真正起点出发，仅发送正常移动/跳跃输入，观察几何与运动时机；不传送、不改移动速度、不关闭危险物。`focused.gd` 的独立设置位置只用于边界状态验证，不作为真实通关证据。
+本次 G02/M04 检查在完整主工程进行，脚本、日志及截图位于根 `tmp/test/solo_architecture/`。已验证输入门控/改键、跳跃、顺序检查点与重试、四个平台运动、总览暂停、相机编辑值、唯一成绩与重复停止；真实大厅五局流程和本机 ENet 观战房主/远端参赛者跨轮流程通过。1920×1080 预览已检查。本轮没有重新执行正常输入全路线通关；下面仅保留上游历史结果，不能作为本次改造后的人工手感或全路线验收。
 
 ### 最新验证记录（2026-10-31 · 障碍与中途存档版）
 
@@ -106,10 +97,8 @@ godot --headless --path . --fixed-fps 60 --script res://tests/traverse.gd -- --d
 - `--demo-respawn` 只用方向键真实走落海面，自动观察第 5 存档复位，再正常输入跑完；不调用角色传送。原生预览使用这条演示路线，**故意包含一次失败**。
 - 熟悉几何的测试输入成绩不是首玩时长预测，也不是实际设备帧率测试。宽肩路线仍可绕开扫杆，但独立集成测试确认全部扫杆正常触发失败；窄桥、滚筒和移动平台则有真实接触覆盖检查。
 
-原生视口录制：
+## 正式单人接入（G02）
 
-```sh
-godot --path . --fixed-fps 60 --script res://tests/traverse.gd -- --capture-dir=/absolute/output/folder
-```
+正式场景由协议 SoloRound 显式注入 PartyInput 与翻译，准备阶段不启动模拟；确认开始后才接受操作，结算/取消时显式停止。正式 Esc 打开框架菜单，键盘与按钮遵守同一输入屏蔽；菜单本身不暂停计时。包内 `settings.gd` 声明可改键动作，F6 使用同一默认绑定且不增删全局 InputMap。观战端不运行本机模拟。
 
-预览使用原生游戏渲染帧，按模拟时间组织，不代表目标设备的实测帧率。仓库不包含引擎、导出包、缓存或录制文件。
+M04：course、player 与 camera 使用明确依赖；根节点 Inspector 可编辑跟随距离、高度、平滑和总览偏移，ChaseCamera 原生 FOV/near/far 保持场景值。五个短音效保存在 `audio/*.tres`，由 GameAudio 池播放；M 只抑制本局声音，协议 master/sfx 音量独立生效。正式个人最佳仍保存到安装目录下 `minigame/<包ID>/config/record.json`，F6 不保存。检查点、四块移动平台与整张关卡维持原规则。

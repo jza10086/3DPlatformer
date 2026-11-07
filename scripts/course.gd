@@ -1,48 +1,47 @@
 extends Node3D
-## Lighthouse Isles: one complete authored world, not a random obstacle generator.
-## All route geometry is original. Tops, widths and branch metadata are also used
-## observationally by the input-only regression runner; they never drive the cube.
+## Authored island route, checkpoint triggers and moving obstacles.
+## Scene metadata defines route order and initial transforms; runtime only animates them.
 signal checkpoint_reached(index: int)
-signal hazard_touched
-signal finish_reached
+signal hazard_touched()
+signal finish_reached()
 
-const INK := Color("274651")
-const CREAM := Color("d9caab")
-const MINT := Color("56ba93")
-const BLUE := Color("5c9fca")
-const CORAL := Color("ed7958")
-const GOLD := Color("efbf56")
-const ROCK := Color("597680")
-const GRASS := Color("62a789")
-const WOOD := Color("b98b62")
+const INK: Color = Color("274651")
+const CREAM: Color = Color("d9caab")
+const MINT: Color = Color("56ba93")
+const BLUE: Color = Color("5c9fca")
+const CORAL: Color = Color("ed7958")
+const GOLD: Color = Color("efbf56")
+const ROCK: Color = Color("597680")
+const GRASS: Color = Color("62a789")
+const WOOD: Color = Color("b98b62")
 var route: Array[Dictionary] = []
 var upper_route: Array[Dictionary] = []
 var chapter_starts: Array[Vector3] = []
 var checkpoints: Array[Vector3] = []
 var checkpoint_chapters: Array[int] = [0,1,1,2,3,3,4,4,5,5]
-var branch_split_index:=0
-var branch_join_index:=0
+var branch_split_index: int = 0
+var branch_join_index: int = 0
 var rollers: Array[Dictionary] = []
 var hurdles: Array[Dictionary] = []
 var checkpoint_beacons: Array[MeshInstance3D] = []
 var checkpoint_route_indices: Array[int] = []
-var finish_position := Vector3(-8,16.48,-28)
-var overview_center := Vector3(0,6,-12)
-var overview_size := 165.0
+var finish_position: Vector3 = Vector3(-8,16.48,-28)
+@export var overview_center: Vector3 = Vector3(0,6,-12)
+@export var overview_size: float = 165.0
 var movers: Array[Dictionary] = []
 var sweepers: Array[Node3D] = []
 var gates: Array[Dictionary] = []
 var gate: Area3D
 var gate_mesh: MeshInstance3D
 var gate_light: MeshInstance3D
-var gate_active := false
-var clock := 0.0
+var gate_active: bool = false
+var clock: float = 0.0
 var checkpoint_rings: Array[MeshInstance3D] = []
 var confetti: Array[Node3D] = []
-var celebrating := false
-var materials: Dictionary = {}
+var celebrating: bool = false
+var materials: Dictionary[String, StandardMaterial3D] = {}
 var windmill_rotors: Array[Node3D] = []
-var current_chapter := 0
+var current_chapter: int = 0
 
 func _ready() -> void:
 	gate = %TimedGate
@@ -106,9 +105,10 @@ func _on_finish(body: Node3D) -> void:
 		finish_reached.emit()
 
 func mat(color: Color, glow: float = 0.0) -> StandardMaterial3D:
-	var key := str(color)+str(glow)
-	if materials.has(key): return materials[key]
-	var m := StandardMaterial3D.new()
+	var key: String = str(color)+str(glow)
+	if materials.has(key):
+		return materials[key]
+	var m: StandardMaterial3D = StandardMaterial3D.new()
 	m.albedo_color = color.srgb_to_linear()
 	m.roughness = .86
 	m.metallic_specular = .12
@@ -128,47 +128,59 @@ func set_checkpoint(index: int) -> void:
 
 func camera_forward_at(pos: Vector3) -> Vector3:
 	# Region-aware nearest segment: vertically stacked shortcut cannot spin the camera.
-	var best_distance:=INF
-	var best_forward:=Vector3.FORWARD
-	for i in route.size()-1:
-		if abs(route[i].chapter-current_chapter)>0: continue
+	var best_distance: float = INF
+	var best_forward: Vector3 = Vector3.FORWARD
+	for i: int in route.size()-1:
+		if abs(route[i].chapter-current_chapter)>0:
+			continue
 		var a: Vector3=route[i].body.position
 		var b: Vector3=route[i+1].body.position
-		var flat:=Vector3(b.x-a.x,0,b.z-a.z)
-		var t:=clampf(Vector3(pos.x-a.x,0,pos.z-a.z).dot(flat)/maxf(flat.length_squared(),.01),0,1)
-		var nearest:=a+flat*t
-		var d:=Vector2(pos.x-nearest.x,pos.z-nearest.z).length_squared()
+		var flat: Vector3 = Vector3(b.x-a.x,0,b.z-a.z)
+		var t: float = clampf(Vector3(pos.x-a.x,0,pos.z-a.z).dot(flat)/maxf(flat.length_squared(),.01),0,1)
+		var nearest: Vector3 = a+flat*t
+		var d: float = Vector2(pos.x-nearest.x,pos.z-nearest.z).length_squared()
 		if d<best_distance:
 			best_distance=d
 			best_forward=flat.normalized()
-	if current_chapter==2: return Vector3.RIGHT
+	if current_chapter==2:
+		return Vector3.RIGHT
 	return best_forward
 
 func _physics_process(delta: float) -> void:
 	clock+=delta
-	for move in movers: move.body.position=move.origin+move.get("axis",Vector3.RIGHT)*sin(clock*move.speed+move.phase)*move.amplitude
-	for pivot in sweepers: pivot.rotation.y=clock*float(pivot.get_meta("speed"))+float(pivot.get_meta("phase"))
-	for rotor in windmill_rotors: rotor.rotation.z+=delta*.45
-	for roller in rollers: roller.visual.rotation.x=clock*roller.speed
+	for move: Dictionary in movers:
+		move.body.position=move.origin+move.axis*sin(clock*move.speed+move.phase)*move.amplitude
+	for pivot: Node3D in sweepers:
+		pivot.rotation.y=clock*float(pivot.get_meta("speed"))+float(pivot.get_meta("phase"))
+	for rotor: Node3D in windmill_rotors:
+		rotor.rotation.z+=delta*.45
+	for roller: Dictionary in rollers:
+		roller.visual.rotation.x=clock*roller.speed
 	gate_active=fmod(clock,4.8)<2.4
 	gate_mesh.visible=gate_active
 	gate_light.material_override=mat(CORAL if gate_active else MINT,.15)
 	if gate_active:
-		for body in gate.get_overlapping_bodies():
-			if body.is_in_group("player"): hazard_touched.emit()
+		for body: Node3D in gate.get_overlapping_bodies():
+			if body.is_in_group("player"):
+				hazard_touched.emit()
 	if celebrating:
-		for i in confetti.size():
-			var piece:=confetti[i]
+		for i: int in confetti.size():
+			var piece: Node3D = confetti[i]
 			piece.visible=true
 			piece.position.y-=delta*(1.3+(i%4)*.3)
 			piece.rotation+=Vector3(delta,delta*1.7,delta*.6)
-			if piece.position.y<16.2: piece.position.y=25
+			if piece.position.y<16.2:
+				piece.position.y=25
 
 func reset() -> void:
 	clock=0
 	celebrating=false
 	set_checkpoint(0)
-	for move in movers: move.body.position=move.origin+move.get("axis",Vector3.RIGHT)*sin(move.phase)*move.amplitude
-	for pivot in sweepers: pivot.rotation.y=float(pivot.get_meta("phase"))
-	for roller in rollers: roller.visual.rotation.x=0
-	for piece in confetti: piece.visible=false
+	for move: Dictionary in movers:
+		move.body.position=move.origin+move.axis*sin(move.phase)*move.amplitude
+	for pivot: Node3D in sweepers:
+		pivot.rotation.y=float(pivot.get_meta("phase"))
+	for roller: Dictionary in rollers:
+		roller.visual.rotation.x=0
+	for piece: Node3D in confetti:
+		piece.visible=false

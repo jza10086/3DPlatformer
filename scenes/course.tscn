@@ -5835,7 +5835,7 @@ mesh = SubResource("BoxMesh_6d65o")
 [node name="Label3D6" type="Label3D" parent="Land1/Node3D14" unique_id=84382684]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.8, 0.24)
 pixel_size = 0.008
-text = "LIGHTHOUSE ISLES"
+text = "极速追逐"
 font_size = 48
 outline_size = 0
 

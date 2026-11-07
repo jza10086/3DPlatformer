@@ -1,9 +1,17 @@
 [gd_scene format=3]
 
+[ext_resource type="PackedScene" path="res://games/protocols/godot_party_default_protocol/audio/game_audio.tscn" id="game_audio"]
+
 [ext_resource type="PackedScene" path="res://games/minigame/godot_party_default_lighthouse_isles/scenes/course.tscn" id="course"]
 [ext_resource type="Script" path="res://games/minigame/godot_party_default_lighthouse_isles/scripts/main.gd" id="1"]
 [ext_resource type="Script" path="res://games/minigame/godot_party_default_lighthouse_isles/scripts/player.gd" id="2_seb35"]
 [ext_resource type="Script" path="res://games/minigame/godot_party_default_lighthouse_isles/scripts/hud.gd" id="3_ibh3q"]
+
+[ext_resource type="Resource" path="../audio/jump.tres" id="sound_jump"]
+[ext_resource type="Resource" path="../audio/land.tres" id="sound_land"]
+[ext_resource type="Resource" path="../audio/save.tres" id="sound_save"]
+[ext_resource type="Resource" path="../audio/fall.tres" id="sound_fall"]
+[ext_resource type="Resource" path="../audio/finish.tres" id="sound_finish"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_ddbq2"]
 sky_top_color = Color(0.56078434, 0.7254902, 0.84313726, 1)
@@ -49,8 +57,14 @@ corner_radius_top_right = 14
 corner_radius_bottom_left = 14
 corner_radius_bottom_right = 14
 
-[node name="LighthouseIsles" type="Node3D" unique_id=2048746659]
+[node name="LighthouseIsles" type="Node3D" unique_id=2048746659 node_paths=PackedStringArray("course")]
 script = ExtResource("1")
+course = NodePath("Course")
+jump_sound = ExtResource("sound_jump")
+land_sound = ExtResource("sound_land")
+save_sound = ExtResource("sound_save")
+fall_sound = ExtResource("sound_fall")
+finish_sound = ExtResource("sound_finish")
 
 [node name="WorldEnvironment1" type="WorldEnvironment" parent="." unique_id=2026878394]
 environment = SubResource("Environment_i6shf")
@@ -69,7 +83,7 @@ fov = 58.0
 near = 0.1
 far = 520.0
 
-[node name="Cube" type="CharacterBody3D" parent="." unique_id=1405038802]
+[node name="Cube" type="CharacterBody3D" parent="." unique_id=1405038802 node_paths=PackedStringArray("camera")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -52, 0.48, 38)
 collision_layer = 2
 floor_max_angle = 0.87266463
@@ -77,6 +91,7 @@ floor_snap_length = 0.25
 platform_on_leave = 2
 script = ExtResource("2_seb35")
 fall_height = -14.0
+camera = NodePath("../ChaseCamera")
 
 [node name="Collision" type="CollisionShape3D" parent="Cube" unique_id=1467050320]
 shape = SubResource("BoxShape3D_617k5")
@@ -136,7 +151,7 @@ offset_top = 7
 offset_right = 257
 offset_bottom = 76
 mouse_filter = 2
-text = "CUBE\nLIGHTHOUSE ISLES"
+text = "CUBE\n极速追逐"
 vertical_alignment = 1
 horizontal_alignment = 0
 autowrap_mode = 3
@@ -530,3 +545,5 @@ mouse_filter = 2
 visible = false
 text = "SOUND OFF"
 horizontal_alignment = 2
+
+[node name="GameAudio" parent="." instance=ExtResource("game_audio")]

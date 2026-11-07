@@ -1,41 +1,42 @@
 extends Control
 ## Compact edge-mounted overlays: the island, not a dashboard, owns the frame.
-signal restart_requested
-signal resume_requested
+signal restart_requested()
+signal resume_requested()
 
-var elapsed := 0.0
-var best := 0.0
-var checkpoint := 0
-var checkpoint_total := 0
-var chapter := 0
-var save_pulse := 0.0
-var falls := 0
-var running := false
-var finished := false
-var paused := false
-var muted := false
-var map_view := false
+var elapsed: float = 0.0
+var best: float = 0.0
+var checkpoint: int = 0
+var checkpoint_total: int = 0
+var chapter: int = 0
+var save_pulse: float = 0.0
+var falls: int = 0
+var running: bool = false
+var finished: bool = false
+var paused: bool = false
+var muted: bool = false
+var map_view: bool = false
 var map_markers: Array[Vector2] = []
 var map_saves: Array[Vector2] = []
-var finish_marker := Vector2(-1,-1)
-var notice := ""
-var notice_detail := ""
-var notice_is_save := false
-var notice_alpha := 0.0
+var finish_marker: Vector2 = Vector2(-1,-1)
+var notice: String = ""
+var notice_detail: String = ""
+var notice_is_save: bool = false
+var notice_alpha: float = 0.0
 var _font: Font
 var _bold: FontVariation
-const WHITE := Color("f7f7ef")
-const INK := Color("24394f")
-const MINT := Color("51e1c2")
-const GOLD := Color("ffd17a")
-const SUBTLE := Color("bad1dc")
-const CHAPTERS := ["HARBOR GARDENS", "WINDMILL COURT", "CANOPY PATHS", "FERRY HARBOR", "RIDGE ASCENT", "LIGHTHOUSE RUN"]
+const WHITE: Color = Color("f7f7ef")
+const INK: Color = Color("24394f")
+const MINT: Color = Color("51e1c2")
+const GOLD: Color = Color("ffd17a")
+const SUBTLE: Color = Color("bad1dc")
+const CHAPTERS: Array[String] = ["HARBOR GARDENS", "WINDMILL COURT", "CANOPY PATHS", "FERRY HARBOR", "RIDGE ASCENT", "LIGHTHOUSE RUN"]
 
-const DefaultText: Translation = preload("res://games/minigame/godot_party_default_lighthouse_isles/i18n/zh_Hans.po")
+const DEFAULT_TEXT: Translation = preload("res://games/minigame/godot_party_default_lighthouse_isles/i18n/zh_Hans.po")
 var i18n: RefCounted
+var formal: bool = false
 
 func hud_text(key: StringName, values: Dictionary) -> String:
-	return DefaultText.get_message(key).format(values) if i18n == null else i18n.text(key,values)
+	return DEFAULT_TEXT.get_message(key).format(values) if i18n == null else i18n.text(key,values)
 
 func _ready() -> void:
 	%Resume.pressed.connect(func() -> void:
@@ -52,11 +53,11 @@ func _ready() -> void:
 	_bold.variation_embolden = 0.7
 
 func time_text(value: float) -> String:
-	var centis := int(value*100.0)
+	var centis: int = int(value*100.0)
 	return "%02d:%02d.%02d" % [centis/6000, (centis/100)%60, centis%100]
 
 func _panel(rect: Rect2, color: Color, radius: int = 12) -> void:
-	var style := StyleBoxFlat.new()
+	var style: StyleBoxFlat = StyleBoxFlat.new()
 	style.bg_color = color
 	style.set_corner_radius_all(radius)
 	draw_style_box(style,rect)
@@ -80,7 +81,7 @@ func refresh() -> void:
 	%SaveHint.text = "Falls return to this saved point" if checkpoint > 0 else "Reach a glowing beacon to save"
 	%SaveBar.max_value = checkpoint_total
 	%SaveBar.value = checkpoint
-	%Controls.get_node("Guide").text = "TAB / ESC   Return to the journey · Timer paused" if map_view else "WASD / ARROWS  Move    SPACE  Jump    TAB  Map    BACKSPACE  Retry    R  Restart    ESC  Pause    M  Sound"
+	%Controls.get_node("Guide").text = ("TAB   Return to the journey · ESC  Menu" if formal else "TAB / ESC   Return to the journey · Timer paused") if map_view else ("WASD / ARROWS  Move    SPACE  Jump    TAB  Map    BACKSPACE  Retry    R  Restart    ESC  Menu    M  Sound" if formal else "WASD / ARROWS  Move    SPACE  Jump    TAB  Map    BACKSPACE  Retry    R  Restart    ESC  Pause    M  Sound")
 	%Prompt.visible = not (running or finished or paused or map_view)
 	%Notice.visible = notice_alpha > 0 and not (finished or paused or map_view)
 	%Notice.modulate.a = notice_alpha
@@ -97,14 +98,16 @@ func _draw() -> void:
 	if not map_view:
 		return
 	draw_set_transform(Vector2.ZERO,0,size/Vector2(1280,800))
-	for i in map_saves.size():
-		var p := map_saves[i]
-		if p.x<12 or p.x>1268 or p.y<12 or p.y>788: continue
+	for i: int in map_saves.size():
+		var p: Vector2 = map_saves[i]
+		if p.x<12 or p.x>1268 or p.y<12 or p.y>788:
+			continue
 		draw_circle(p,7,INK)
 		draw_circle(p,5,MINT if i<checkpoint else GOLD)
-	for i in map_markers.size():
-		var p := map_markers[i]
-		if p.x<12 or p.x>1268 or p.y<12 or p.y>788: continue
+	for i: int in map_markers.size():
+		var p: Vector2 = map_markers[i]
+		if p.x<12 or p.x>1268 or p.y<12 or p.y>788:
+			continue
 		draw_circle(p+Vector2(0,2),13,Color(0.06,0.12,0.17,0.4))
 		draw_circle(p,12,MINT if i<=chapter else WHITE)
 		_text(p+Vector2(-4,5),str(i+1),14,INK,true)

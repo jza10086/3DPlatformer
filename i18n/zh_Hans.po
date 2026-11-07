@@ -24,3 +24,42 @@ msgstr "CHECKPOINT  {current} / {total}"
 
 msgid "hud.result"
 msgstr "{time}\n{falls} falls · {total} checkpoints · One excellent cube"
+
+msgid "向左"
+msgstr "向左"
+
+msgid "向右"
+msgstr "向右"
+
+msgid "向前"
+msgstr "向前"
+
+msgid "向后"
+msgstr "向后"
+
+msgid "跳跃"
+msgstr "跳跃"
+
+msgid "重新开始"
+msgstr "重新开始"
+
+msgid "返回检查点"
+msgstr "返回检查点"
+
+msgid "确认"
+msgstr "确认"
+
+msgid "声音开关"
+msgstr "声音开关"
+
+msgid "地图总览"
+msgstr "地图总览"
+
+msgid "notice.missing_checkpoint"
+msgstr "FIND CHECKPOINT {checkpoint} BEFORE CONTINUING"
+
+msgid "notice.saved_checkpoint"
+msgstr "SAVED CHECKPOINT  {current} / {total}"
+
+msgid "notice.return_checkpoint"
+msgstr "BACK AT CHECKPOINT  {current} / {total}"
