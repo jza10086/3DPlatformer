@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
-  "core_api_major": 4,
-  "package_version": "1.0.4",
+  "core_api_major": 5,
+  "package_version": "1.0.6",
   "id": "godot_party_default_lighthouse_isles",
   "name": "极速追逐",
   "kind": "minigame",
@@ -12,7 +12,7 @@
   ],
   "introduction": "WASD 移动，空格跳跃。按路线通过所有检查点，抵达终点。",
   "dependencies": {
-    "godot_party_default_protocol": "1.0.4"
+    "godot_party_default_protocol": "1.0.6"
   },
   "adapters": [
     {
