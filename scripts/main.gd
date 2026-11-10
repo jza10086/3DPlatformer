@@ -1,6 +1,6 @@
 extends Node3D
 const CONTROLS: GDScript = preload("res://games/protocols/godot_party_default_protocol/solo_controls.gd")
-const SETTINGS: GDScript = preload("res://games/minigame/godot_party_default_lighthouse_isles/settings.gd")
+const SETTINGS: GDScript = preload("res://games/minigame/gp_chase/settings.gd")
 var controls: CONTROLS = CONTROLS.new(SETTINGS.schema())
 var _active: bool = false
 var _stopped: bool = false
@@ -9,9 +9,9 @@ var _text_source: RefCounted
 signal completed(metrics: Dictionary)
 var personal_best: int = 0
 ## A full island journey. One plain cube; no external assets or autoloads.
-const COURSE_SCRIPT: GDScript = preload("res://games/minigame/godot_party_default_lighthouse_isles/scripts/course.gd")
-const PLAYER_SCRIPT: GDScript = preload("res://games/minigame/godot_party_default_lighthouse_isles/scripts/player.gd")
-const HUD_SCRIPT: GDScript = preload("res://games/minigame/godot_party_default_lighthouse_isles/scripts/hud.gd")
+const COURSE_SCRIPT: GDScript = preload("res://games/minigame/gp_chase/scripts/course.gd")
+const PLAYER_SCRIPT: GDScript = preload("res://games/minigame/gp_chase/scripts/player.gd")
+const HUD_SCRIPT: GDScript = preload("res://games/minigame/gp_chase/scripts/hud.gd")
 @export var course: COURSE_SCRIPT
 @onready var player: PLAYER_SCRIPT = $Cube
 @onready var camera: Camera3D = $ChaseCamera

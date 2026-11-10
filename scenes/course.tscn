@@ -1,6 +1,6 @@
 [gd_scene format=3]
 
-[ext_resource type="Script" path="res://games/minigame/godot_party_default_lighthouse_isles/scripts/course.gd" id="1_3u34y"]
+[ext_resource type="Script" path="res://games/minigame/gp_chase/scripts/course.gd" id="1_3u34y"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_1tw74"]
 size = Vector3(22, 1, 24)
