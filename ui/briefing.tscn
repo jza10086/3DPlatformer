@@ -1,0 +1,13 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="PackedScene" path="res://games/protocols/godot_party_default_protocol/briefing/briefing_page.tscn" id="1"]
+
+[node name="Briefing" instance=ExtResource("1")]
+
+[node name="Title" parent="View/Layout/Center/Content" index="0"]
+text = "极速追逐"
+
+[node name="Introduction" parent="View/Layout/Center/Content/Columns/RightColumn/InformationPanel/InformationMargin/Information/Rules/InformationScroll" index="0"]
+text = "WASD 移动，空格跳跃。按路线通过所有检查点，抵达终点。"
+
+[editable path="View"]
