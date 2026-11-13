@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
-  "core_api_major": 5,
-  "package_version": "1.0.14",
+  "core_api_major": 6,
+  "package_version": "1.0.15",
   "id": "gp_chase",
   "name": "极速追逐",
   "kind": "minigame",
@@ -15,7 +15,7 @@
   ],
   "introduction": "WASD 移动，空格跳跃。按路线通过所有检查点，抵达终点。",
   "dependencies": {
-    "godot_party_default_protocol": "1.0.13"
+    "godot_party_default_protocol": "1.0.14"
   },
   "adapters": [
     {
