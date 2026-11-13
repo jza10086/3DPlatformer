@@ -102,3 +102,5 @@ docs/map-design.md   案例到地图的设计依据
 正式场景由协议 SoloRound 显式注入 PartyInput 与翻译，准备阶段不启动模拟；确认开始后才接受操作，结算/取消时显式停止。正式 Esc 打开框架菜单，键盘与按钮遵守同一输入屏蔽；菜单本身不暂停计时。包内 `settings.gd` 声明可改键动作，F6 使用同一默认绑定且不增删全局 InputMap。观战端不运行本机模拟。
 
 M04：course、player 与 camera 使用明确依赖；根节点 Inspector 可编辑跟随距离、高度、平滑和总览偏移，ChaseCamera 原生 FOV/near/far 保持场景值。五个短音效保存在 `audio/*.tres`，由 GameAudio 池播放；M 只抑制本局声音，协议 master/sfx 音量独立生效。正式个人最佳仍保存到安装目录下 `minigame/<包ID>/config/record.json`，F6 不保存。检查点、四块移动平台与整张关卡维持原规则。
+
+WASD 移动，空格跳跃。按路线通过所有检查点，抵达终点。
