@@ -16,7 +16,7 @@ const CUBE_SIZE: float = 0.85
 
 @export var fall_height: float = -15.0
 @export var camera: Camera3D
-const CONTROLS: GDScript = preload("res://games/protocols/godot_party_default_protocol/solo_controls.gd")
+const CONTROLS: GDScript = preload("res://games/protocols/GP_default_protocol/solo_controls.gd")
 var controls: CONTROLS
 var _jump_held: bool = false
 var controls_enabled: bool = true

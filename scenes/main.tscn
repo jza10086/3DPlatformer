@@ -1,11 +1,11 @@
 [gd_scene format=3]
 
-[ext_resource type="PackedScene" path="res://games/protocols/godot_party_default_protocol/audio/game_audio.tscn" id="game_audio"]
+[ext_resource type="PackedScene" path="res://games/protocols/GP_default_protocol/audio/game_audio.tscn" id="game_audio"]
 
-[ext_resource type="PackedScene" path="res://games/minigame/gp_chase/scenes/course.tscn" id="course"]
-[ext_resource type="Script" path="res://games/minigame/gp_chase/scripts/main.gd" id="1"]
-[ext_resource type="Script" path="res://games/minigame/gp_chase/scripts/player.gd" id="2_seb35"]
-[ext_resource type="Script" path="res://games/minigame/gp_chase/scripts/hud.gd" id="3_ibh3q"]
+[ext_resource type="PackedScene" path="res://games/minigame/GP_chase/scenes/course.tscn" id="course"]
+[ext_resource type="Script" path="res://games/minigame/GP_chase/scripts/main.gd" id="1"]
+[ext_resource type="Script" path="res://games/minigame/GP_chase/scripts/player.gd" id="2_seb35"]
+[ext_resource type="Script" path="res://games/minigame/GP_chase/scripts/hud.gd" id="3_ibh3q"]
 
 [ext_resource type="Resource" path="../audio/jump.tres" id="sound_jump"]
 [ext_resource type="Resource" path="../audio/land.tres" id="sound_land"]

@@ -64,7 +64,7 @@ godot --path .
 
 ## 设计参考：学结构，不复制素材
 
-参考了真实案例后再设计地图，具体对应关系详见 [设计说明](gp_chase_map_design.md)。
+参考了真实案例后再设计地图，具体对应关系详见 [设计说明](GP_chase_map_design.md)。
 
 - **Fall Guys · The Whirlygig**：Mediatonic 设计师说明了旋转扫杆、台阶、巨型风扇的递进，以及机关产生风险捷径的可能。这里借鉴「先认识机关，再组合复用」，不移植弹射或布娃娃。[PlayStation 官方设计师文章](https://blog.playstation.com/?p=333768)
 - **Fall Guys · Treetop Tumble**：官方介绍多层、分支路线。这里落实为「下层宽主路 / 上层窄捷径 / 失误恢复层」。[Fall Guys 官方介绍](https://www.fallguys.com/news/fall-guys-season-5-blog?lang=en-US)
@@ -86,7 +86,7 @@ docs/map-design.md   案例到地图的设计依据
 
 ## 验证
 
-最近记录与未完成验收见 [gp_chase 开发记录](gp_chase_development.md)。按本次改动选取必要检查；旧测试命令不作为当前入口。
+最近记录与未完成验收见 [GP_chase 开发记录](GP_chase_development.md)。按本次改动选取必要检查；旧测试命令不作为当前入口。
 
 ## 正式单人接入（G02）
 
@@ -100,5 +100,5 @@ WASD 移动，空格跳跃。按路线通过所有检查点，抵达终点。
 
 未带 `res://` 的源码路径以本包根目录为基准。
 
-- [M04 极速追逐　A　依赖 G02、G03](gp_chase_development.md)
-- [极速追逐：从参考案例到完整地图](gp_chase_map_design.md)
+- [M04 极速追逐　A　依赖 G02、G03](GP_chase_development.md)
+- [极速追逐：从参考案例到完整地图](GP_chase_map_design.md)

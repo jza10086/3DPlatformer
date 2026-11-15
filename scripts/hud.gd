@@ -31,7 +31,7 @@ const GOLD: Color = Color("ffd17a")
 const SUBTLE: Color = Color("bad1dc")
 const CHAPTERS: Array[String] = ["HARBOR GARDENS", "WINDMILL COURT", "CANOPY PATHS", "FERRY HARBOR", "RIDGE ASCENT", "LIGHTHOUSE RUN"]
 
-const DEFAULT_TEXT: Translation = preload("res://games/minigame/gp_chase/i18n/zh_Hans.po")
+const DEFAULT_TEXT: Translation = preload("res://games/minigame/GP_chase/i18n/zh_Hans.po")
 var i18n: RefCounted
 var formal: bool = false
 

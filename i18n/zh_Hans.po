@@ -63,3 +63,6 @@ msgstr "SAVED CHECKPOINT  {current} / {total}"
 
 msgid "notice.return_checkpoint"
 msgstr "BACK AT CHECKPOINT  {current} / {total}"
+
+msgid "package.name"
+msgstr "极速追逐"
